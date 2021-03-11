@@ -4,12 +4,32 @@ https://adventofcode.com/2016
 
 ## Day11
 
+This took me a while. Especially part 2 which took ... quite a while.
+
 ```txt
 Finished after 55 steps!
 27852.6190233 seconds
 ```
 
-That's ... almost **8 hours**. Not proud of it  😬.
+That's ... almost **8 hours**. Nothing to be proud of 😬.
+
+I already knew from the first part that my solution was not great but I let it run
+overnight because I was curious how long it actually would take to finish.
+
+Changing my algorithm from a [DFS](https://en.wikipedia.org/wiki/Depth-first_search)
+to a [BFS](https://en.wikipedia.org/wiki/Breadth-first_search) approach
+brought the execution time down slightly.
+
+What really brought execution time down was clever caching of the state (i.e. what
+configuration had I already tried). Instead of encoding every microchip and generator
+individually, I realized I could **treat them the same**. E.g. every microchip
+on floor one with its generator on floor 3 is the same. Encoding the difference of
+floors for each microchip with their generator brought time down to 15 seconds 🥳!
+
+```txt
+Finished after 55 steps!
+END (after 15.2185878 seconds)
+```
 
 ## Day 19
 

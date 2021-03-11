@@ -15,40 +15,15 @@ Console.WriteLine($"END (after {sw.Elapsed.TotalSeconds} seconds)");
 void Part1()
 {
   var state = ReadInput();
-	Step(state, 0, new Dictionary<string, int>());
+	BFS(state);
 }
 
-void Step(State state, int steps, Dictionary<string, int> cache)
+Nullable<bool> Check(State state)
 {
-	if (steps > 80) return;
-
-	var encoded = state.Encode();
-
-	if (cache.ContainsKey(encoded))
-	{
-		if (cache[encoded] == -1)
-		{
-			return;
-		}
-		if (steps < cache[encoded])
-		{
-			cache[encoded] = steps;
-		}
-		else
-		{
-			return;
-		}
-	}
-	else
-	{
-		cache.Add(encoded, steps);
-	}
-
 	// Win?
 	if (state.Elevator == 3 && !state.Floors[0].Any() && !state.Floors[1].Any() && !state.Floors[2].Any())
 	{
-		System.Console.WriteLine($"Finished after {steps} steps!");
-		return;
+		return true;
 	}
 	// Lose?
 	for (var i = 0; i < state.Floors.Length; i++)
@@ -60,66 +35,94 @@ void Step(State state, int steps, Dictionary<string, int> cache)
 			var badGens = state.Floors[i].Where(s => s[1] == 'G' && s[0] != chip[0]);
 			if (goodGen == null && badGens.Any())
 			{
-				cache[encoded] = -1;
-				return;
+				return false;
 			}
 		}
 	}
+	return null;
+}
 
-  // get items at current floor
-	var items = state.Floors[state.Elevator].ToList();
-	if (!items.Any())
+void BFS(State startState)
+{
+	var cache = new HashSet<string>();
+  var queue = new Queue<State>();
+	queue.Enqueue(startState);
+	while (queue.Count > 0)
 	{
-		throw new InvalidOperationException();
-	}
-	foreach (var item in items)
-	{
-		// Second item?
-		var items2 = state.Floors[state.Elevator].ToList();
-		items2.Remove(item);
-		foreach (var item2 in items2)
-		{
-			// go up?
-			if (state.Elevator < 3)
-			{
-				var stateCopy = state.Clone();
-				stateCopy.Floors[stateCopy.Elevator].Remove(item);
-				stateCopy.Floors[stateCopy.Elevator].Remove(item2);
-				stateCopy.Elevator++;
-				stateCopy.Floors[stateCopy.Elevator].Add(item);
-				stateCopy.Floors[stateCopy.Elevator].Add(item2);
-				Step(stateCopy, steps + 1, cache);
-			}
-			// go down?
-			if (state.Elevator > 0)
-			{
-				var stateCopy = state.Clone();
-				stateCopy.Floors[stateCopy.Elevator].Remove(item);
-				stateCopy.Floors[stateCopy.Elevator].Remove(item2);
-				stateCopy.Elevator--;
-				stateCopy.Floors[stateCopy.Elevator].Add(item);
-				stateCopy.Floors[stateCopy.Elevator].Add(item2);
-				Step(stateCopy, steps + 1, cache);
-			}
-		}
+		var state = queue.Dequeue();
 
-		// go up?
-		if (state.Elevator < 3)
+		var encoded = state.Encode();
+		if (!cache.Contains(encoded))
 		{
-			var stateCopy = state.Clone();
-			stateCopy.Floors[stateCopy.Elevator].Remove(item);
-			stateCopy.Elevator++;
-			stateCopy.Floors[stateCopy.Elevator].Add(item);
-			Step(stateCopy, steps + 1, cache);
-		}
-		// go down?
-		if (state.Elevator > 0)
-		{
-			var stateCopy = state.Clone();
-			stateCopy.Floors[stateCopy.Elevator].Remove(item);
-			stateCopy.Elevator--;
-			stateCopy.Floors[stateCopy.Elevator].Add(item);
-			Step(stateCopy, steps + 1, cache);
+			cache.Add(encoded);
+
+			var check = Check(state);
+			if (check.HasValue)
+			{
+				if (check.Value)
+				{
+					System.Console.WriteLine($"Finished after {state.Steps} steps!");
+				}
+			}
+			else
+			{
+				// get items at current floor
+				var items = state.Floors[state.Elevator].ToList();
+				if (!items.Any())
+				{
+					throw new InvalidOperationException();
+				}
+				foreach (var item in items)
+				{
+					// Second item?
+					var items2 = state.Floors[state.Elevator].ToList();
+					items2.Remove(item);
+					foreach (var item2 in items2)
+					{
+						// go up?
+						if (state.Elevator < 3)
+						{
+							var stateCopy = state.Clone();
+							stateCopy.Floors[stateCopy.Elevator].Remove(item);
+							stateCopy.Floors[stateCopy.Elevator].Remove(item2);
+							stateCopy.Elevator++;
+							stateCopy.Floors[stateCopy.Elevator].Add(item);
+							stateCopy.Floors[stateCopy.Elevator].Add(item2);
+							queue.Enqueue(stateCopy);
+						}
+						// go down?
+						if (state.Elevator > 0)
+						{
+							var stateCopy = state.Clone();
+							stateCopy.Floors[stateCopy.Elevator].Remove(item);
+							stateCopy.Floors[stateCopy.Elevator].Remove(item2);
+							stateCopy.Elevator--;
+							stateCopy.Floors[stateCopy.Elevator].Add(item);
+							stateCopy.Floors[stateCopy.Elevator].Add(item2);
+							queue.Enqueue(stateCopy);
+						}
+					}
+
+					// go up?
+					if (state.Elevator < 3)
+					{
+						var stateCopy = state.Clone();
+						stateCopy.Floors[stateCopy.Elevator].Remove(item);
+						stateCopy.Elevator++;
+						stateCopy.Floors[stateCopy.Elevator].Add(item);
+						queue.Enqueue(stateCopy);
+					}
+					// go down?
+					if (state.Elevator > 0)
+					{
+						var stateCopy = state.Clone();
+						stateCopy.Floors[stateCopy.Elevator].Remove(item);
+						stateCopy.Elevator--;
+						stateCopy.Floors[stateCopy.Elevator].Add(item);
+						queue.Enqueue(stateCopy);
+					}
+				}
+			}
 		}
 	}
 }
@@ -138,6 +141,8 @@ static State ReadInput()
 class State
 {
 	internal int Elevator { get; set; }
+	
+	internal int Steps { get; private set; }
 
 	internal List<string>[] Floors { get;} = new List<string>[4]
 	{
@@ -152,6 +157,7 @@ class State
 		var clone = new State
 		{
 			Elevator = Elevator,
+			Steps = Steps + 1,
 		};
 		clone.Floors[0] = Floors[0].ToList();
 		clone.Floors[1] = Floors[1].ToList();
@@ -162,16 +168,30 @@ class State
 
 	internal string Encode()
 	{
+		void EncodeFloor(int level, StringBuilder sb)
+		{
+			sb.Append($"/{level}:");
+			foreach (var s in Floors[level])
+			{
+				if (s[1] == 'M')
+				{
+					for (var i = 0; i < Floors.Length; i++)
+					{
+						var floor = Floors[i];
+						if (floor.Contains($"{s[0]}G"))
+						{
+							sb.Append(level - i);
+						}
+					}
+				}
+			}
+		}
 		var sb = new StringBuilder();
 		sb.Append(Elevator);
-		sb.Append("/0:");
-		sb.Append(string.Join(";", Floors[0].OrderBy(x => x).Select(x => x.ToString()).ToArray()));
-		sb.Append("/1:");
-		sb.Append(string.Join(";", Floors[1].OrderBy(x => x).Select(x => x.ToString()).ToArray()));
-		sb.Append("/2:");
-		sb.Append(string.Join(";", Floors[2].OrderBy(x => x).Select(x => x.ToString()).ToArray()));
-		sb.Append("/3:");
-		sb.Append(string.Join(";", Floors[3].OrderBy(x => x).Select(x => x.ToString()).ToArray()));
+		EncodeFloor(0, sb);
+		EncodeFloor(1, sb);
+		EncodeFloor(2, sb);
+		EncodeFloor(3, sb);
 		return sb.ToString();
 	}
 }
