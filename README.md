@@ -38,3 +38,18 @@ END (after 17.0722168 seconds)
 ```
 
 **17 seconds** ... way better 🤩.
+
+## Day 22
+
+```txt
+...
+Goal reached after 271 steps
+Goal reached after 269 steps
+Goal reached after 267 steps
+Goal reached after 265 steps
+Goal reached after 263 steps
+Goal reached after 261 steps
+END (after 3245.6201707 seconds)
+```
+
+54 minutes ... meh ... good enough.
