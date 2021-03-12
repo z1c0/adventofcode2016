@@ -73,3 +73,9 @@ END (after 3245.6201707 seconds)
 ```
 
 54 minutes ... meh ... good enough.
+
+## All Done!
+
+![Finished AOC 2016](aoc_2016_1.png)
+
+![Finished AOC 2016](aoc_2016_2.png)
